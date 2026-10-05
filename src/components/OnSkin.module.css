@@ -1,0 +1,86 @@
+.section {
+  padding: clamp(56px, 8vw, 104px) 0 24px;
+  scroll-margin-top: 56px;
+}
+
+.title {
+  margin: 0 20px 20px;
+  font-family: var(--ff-display), sans-serif;
+  font-weight: 400;
+  font-size: clamp(2.4rem, 10vw, 3.4rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  word-spacing: -0.1em;
+}
+
+/* A row of polaroids you swipe through; the page itself never scrolls sideways. */
+.rail {
+  display: flex;
+  gap: 14px;
+  margin: 0;
+  padding: 8px 20px 28px;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 20px;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+.rail li {
+  flex: none;
+  width: min(62vw, 260px);
+  scroll-snap-align: start;
+}
+
+.rail li:nth-child(odd) figure {
+  transform: rotate(-1.5deg);
+}
+
+.rail li:nth-child(even) figure {
+  transform: rotate(1.5deg);
+}
+
+.rail figure {
+  margin: 0;
+  padding: 8px 8px 0;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 14px 28px -18px rgb(16 41 42 / 0.55);
+}
+
+.rail img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+.rail figcaption {
+  padding: 10px 2px 12px;
+  font-size: 13px;
+  color: #3c5153;
+}
+
+@media (min-width: 900px) {
+  .section {
+    max-width: 1240px;
+    margin: 0 auto;
+  }
+
+  .rail {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    overflow: visible;
+  }
+
+  .rail li {
+    width: auto;
+  }
+}

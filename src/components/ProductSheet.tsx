@@ -1,12 +1,14 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect } from "react";
 import { FROM_CLIENT, productById } from "@/lib/products";
 import { useSheetDrag } from "@/lib/useSheetDrag";
 import { useCart } from "./cart";
 import { CloseIcon } from "./icons";
 import Ph from "./Ph";
+import ShipToday from "./ShipToday";
 import base from "./CartDrawer.module.css";
 import styles from "./ProductSheet.module.css";
 
@@ -50,8 +52,10 @@ export default function ProductSheet() {
             {p.spfNote && <p className={styles.spf}>Nema zaštitni faktor (SPF). Na suncu uz njega koristi kremu za sunčanje.</p>}
             <details className={styles.more}><summary>Kako koristiti</summary><p><Ph>{FROM_CLIENT}</Ph></p></details>
             <details className={styles.more}><summary>Sastojci (INCI)</summary><p><Ph>{FROM_CLIENT}</Ph></p></details>
+            <Link href={`/${p.slug}`} className={styles.page} onClick={close}>Sve o proizvodu</Link>
           </div>
           <div className={base.foot}>
+            <ShipToday />
             <button type="button" className={base.btn} onClick={(e) => add(p.id, e.currentTarget)}>U košaricu</button>
             <p className={base.pay}>Kartice · Apple Pay · Google Pay · Pouzeće · Šaljemo po Hrvatskoj</p>
           </div>

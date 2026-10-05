@@ -290,6 +290,24 @@
   line-height: 1.45;
 }
 
+.link {
+  justify-self: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: 600 14px/1 var(--ff-body), sans-serif;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.link:focus-visible {
+  outline: 2px solid #10292a;
+  outline-offset: 2px;
+}
+
 .proto {
   margin: 0;
   padding: 10px 12px;

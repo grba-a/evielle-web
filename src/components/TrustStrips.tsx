@@ -1,3 +1,4 @@
+import { OpenDelivery } from "./cart";
 import EMark from "./EMark";
 import styles from "./TrustStrips.module.css";
 
@@ -35,6 +36,9 @@ export default function TrustStrips() {
       </ul>
       <Strip words={TOP} className={styles.strip} />
       <Strip words={BOTTOM} className={`${styles.strip} ${styles.alt}`} />
+      <div className={styles.more}>
+        <OpenDelivery className={styles.btn}>Dostava i povrat</OpenDelivery>
+      </div>
     </section>
   );
 }

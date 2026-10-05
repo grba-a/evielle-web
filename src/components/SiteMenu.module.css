@@ -134,7 +134,8 @@
   gap: 2px;
 }
 
-.list a {
+.list a,
+.list button {
   display: flex;
   align-items: center;
   min-height: 44px;
@@ -143,8 +144,25 @@
   font-size: 20px;
 }
 
+.list button {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.social {
+  margin: 8px 20px 0;
+  font-size: 14px;
+  color: #3c5153;
+}
+
 .icon:focus-visible,
 .list a:focus-visible,
+.list button:focus-visible,
 .band:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: -4px;
@@ -164,6 +182,14 @@
     display: flex;
     gap: 32px;
     padding-inline: max(20px, calc(50% - 600px));
+  }
+
+  .list button {
+    width: auto;
+  }
+
+  .social {
+    margin-inline: max(20px, calc(50% - 600px));
   }
 }
 

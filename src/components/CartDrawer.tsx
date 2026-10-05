@@ -106,6 +106,7 @@ export default function CartDrawer() {
 }
 
 function Checkout({ hasSet }: { hasSet: boolean }) {
+  const { open } = useCart();
   const [step, setStep] = useState<"cart" | "mail" | "done">("cart");
   const [note, setNote] = useState(false);
   const [err, setErr] = useState("");
@@ -151,6 +152,7 @@ function Checkout({ hasSet }: { hasSet: boolean }) {
       <button type="button" className={styles.apay} onClick={() => setNote(true)}>Apple Pay</button>
       <button type="button" className={styles.btn} onClick={() => setStep("mail")}>Rezerviraj iz prve serije</button>
       {note ? <p className={styles.proto} role="status">{PROTO}</p> : <p className={styles.pay}>Kartice · Apple Pay · Google Pay · Pouzeće<br />Na adresu ili u BOX NOW paketomat</p>}
+      <button type="button" className={styles.link} onClick={() => open("delivery")}>Dostava i povrat</button>
     </div>
   );
 }

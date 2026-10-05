@@ -4,11 +4,12 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { flyToBag } from "@/lib/flyToBag";
 import { ITEMS, type ItemId, type Product } from "@/lib/products";
 import CartDrawer from "./CartDrawer";
+import DeliverySheet from "./DeliverySheet";
 import ProductSheet from "./ProductSheet";
 import SiteMenu from "./SiteMenu";
 import styles from "./cart.module.css";
 
-type Panel = "cart" | "menu" | "product" | null;
+type Panel = "cart" | "menu" | "product" | "delivery" | null;
 type Cart = {
   lines: Partial<Record<ItemId, number>>;
   count: number;
@@ -78,8 +79,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   return (
     <CartContext.Provider value={value}>
       {children}
-      <div className={styles.scrim} data-on={panel === "cart" || panel === "product" ? "" : undefined} onClick={close} aria-hidden="true" />
+      <div className={styles.scrim} data-on={panel && panel !== "menu" ? "" : undefined} onClick={close} aria-hidden="true" />
       <ProductSheet />
+      <DeliverySheet />
       <CartDrawer />
       <SiteMenu />
       <p className={styles.sr} role="status" aria-live="polite">{said}</p>
@@ -97,6 +99,15 @@ export function AddToCart({ id, className, children }: { id: ItemId; className?:
   const { add } = useCart();
   return (
     <button type="button" className={className} onClick={(e) => add(id, e.currentTarget)}>
+      {children}
+    </button>
+  );
+}
+
+export function OpenDelivery({ className, children }: { className?: string; children: React.ReactNode }) {
+  const { open } = useCart();
+  return (
+    <button type="button" className={className} onClick={() => open("delivery")}>
       {children}
     </button>
   );

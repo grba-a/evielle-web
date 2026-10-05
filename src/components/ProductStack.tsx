@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { PRODUCTS } from "@/lib/products";
 import { useCart } from "./cart";
@@ -34,7 +35,7 @@ export default function ProductStack() {
             </button>
             <div className={styles.info}>
               <div>
-                <h3 className={styles.name} lang="en">{p.name}</h3>
+                <h3 className={styles.name} lang="en"><Link href={`/${p.slug}`}>{p.name}</Link></h3>
                 <span>{[p.type, p.size].filter(Boolean).join(" · ")}</span>
                 <span><Ph /></span>
               </div>

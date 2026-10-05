@@ -6,6 +6,8 @@ export const FROM_CLIENT = "od klijenta";
 
 export type Product = {
   id: "butter" | "mist" | "oil";
+  /** Address of the product page, evielle.hr/<slug>. */
+  slug: string;
   name: string;
   /** Croatian product type shown under the English label name. */
   type: string;
@@ -29,6 +31,7 @@ export type Product = {
 export const PRODUCTS: Product[] = [
   {
     id: "butter",
+    slug: "body-butter",
     name: "Body Butter",
     type: "Maslac za tijelo",
     variant: "Fast Tanning",
@@ -45,6 +48,7 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "mist",
+    slug: "refreshing-mist",
     name: "Refreshing Mist",
     type: "Osvježavajući sprej za tijelo",
     variant: "Summer Fruit",
@@ -59,6 +63,7 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "oil",
+    slug: "dry-body-oil",
     name: "Dry Body Oil",
     type: "Suho ulje za tijelo, sa sjajem",
     variant: "Shimmering",
@@ -97,6 +102,7 @@ export function productLine(p: Pick<Product, "type" | "size">) {
 }
 
 export const productById = (id: string) => PRODUCTS.find((p) => p.id === id);
+export const productBySlug = (slug: string) => PRODUCTS.find((p) => p.slug === slug);
 
 /** Wide screens get landscape clips; the same query decides the hero layout in CSS. */
 export const WIDE_QUERY = "(min-width: 900px), (orientation: landscape) and (min-width: 600px)";

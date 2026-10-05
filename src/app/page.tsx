@@ -1,7 +1,7 @@
-import { CartProvider } from "@/components/cart";
 import FooterFrame from "@/components/FooterFrame";
 import HeroStories from "@/components/HeroStories";
 import NewsletterPostcard from "@/components/NewsletterPostcard";
+import OnSkin from "@/components/OnSkin";
 import ProductStack from "@/components/ProductStack";
 import SetFan from "@/components/SetFan";
 import SiteHeader from "@/components/SiteHeader";
@@ -18,17 +18,18 @@ const ORGANIZATION = {
 
 export default function Home() {
   return (
-    <CartProvider>
+    <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION).replace(/</g, "\\u003c") }} />
       <SiteHeader />
       <main>
         <HeroStories />
         <ProductStack />
         <SetFan />
+        <OnSkin />
         <TrustStrips />
         <NewsletterPostcard />
       </main>
       <FooterFrame />
-    </CartProvider>
+    </>
   );
 }

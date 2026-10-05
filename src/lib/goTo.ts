@@ -1,9 +1,10 @@
 import type { MouseEvent } from "react";
 
 // Scroll to a section after a sheet has closed and released the page scroll lock.
+// On a page without that section (a product page), the link navigates home client-side, so the cart stays.
 export function goTo(e: MouseEvent<HTMLAnchorElement>, close: () => void) {
-  const id = e.currentTarget.getAttribute("href")?.slice(1);
-  if (!id) return;
+  const id = e.currentTarget.getAttribute("href")?.split("#")[1];
+  if (!id || !document.getElementById(id)) { close(); return; }
   e.preventDefault();
   close();
   requestAnimationFrame(() => {

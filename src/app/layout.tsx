@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Tenor_Sans, Hanken_Grotesk } from "next/font/google";
+import { CartProvider } from "@/components/cart";
 import "./globals.css";
 
 const display = Tenor_Sans({
@@ -38,7 +39,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="hr" className={`${display.variable} ${body.variable} antialiased`}>
-      <body>{children}</body>
+      <body>
+        {/* the cart lives above the pages, so it survives moving between the homepage and a product page */}
+        <CartProvider>{children}</CartProvider>
+      </body>
     </html>
   );
 }

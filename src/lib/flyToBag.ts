@@ -34,26 +34,30 @@ export function flyToBag(from: HTMLElement, color: string): Promise<void> {
   x.animate([{ transform: `translate(${x0}px,${y0}px)` }, { transform: `translate(${x0 + dx}px,${y0}px)` }], {
     duration: 640, easing: "linear", fill: "forwards",
   });
-  return y
-    .animate(
+  const flight = y.animate(
+    [
+      { transform: "translateY(0) scale(.7)", easing: "cubic-bezier(0.2, 0.8, 0.4, 1)" },
+      { transform: `translateY(${apex}px) scale(1)`, offset: 0.6, easing: "cubic-bezier(0.55, 0, 0.85, 0.4)" },
+      { transform: `translateY(${dy}px) scale(.45)` },
+    ],
+    { duration: 640, fill: "forwards" },
+  );
+  // The product must land even if the flight never finishes (tab hidden mid-flight, animation cancelled).
+  const landed = new Promise<void>((done) => {
+    flight.finished.then(() => done(), () => done());
+    setTimeout(done, 900);
+  });
+  return landed.then(() => {
+    x.remove();
+    // the catch: the bag squashes, overshoots, settles
+    bag.querySelector("svg")?.animate(
       [
-        { transform: "translateY(0) scale(.7)", easing: "cubic-bezier(0.2, 0.8, 0.4, 1)" },
-        { transform: `translateY(${apex}px) scale(1)`, offset: 0.6, easing: "cubic-bezier(0.55, 0, 0.85, 0.4)" },
-        { transform: `translateY(${dy}px) scale(.45)` },
+        { transform: "none", easing: "cubic-bezier(0.3, 0, 0.5, 1)" },
+        { transform: "translateY(1.5px) scale(.84)", offset: 0.28, easing: EASE },
+        { transform: "scale(1.06)", offset: 0.64 },
+        { transform: "none" },
       ],
-      { duration: 640, fill: "forwards" },
-    )
-    .finished.then(() => {
-      x.remove();
-      // the catch: the bag squashes, overshoots, settles
-      bag.querySelector("svg")?.animate(
-        [
-          { transform: "none", easing: "cubic-bezier(0.3, 0, 0.5, 1)" },
-          { transform: "translateY(1.5px) scale(.84)", offset: 0.28, easing: EASE },
-          { transform: "scale(1.06)", offset: 0.64 },
-          { transform: "none" },
-        ],
-        { duration: 420 },
-      );
-    });
+      { duration: 420 },
+    );
+  });
 }

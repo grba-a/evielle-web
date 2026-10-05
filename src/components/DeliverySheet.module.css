@@ -1,0 +1,41 @@
+.body {
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
+
+.rows {
+  margin: 0;
+}
+
+.rows > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid #dce2dd;
+  font-size: 15px;
+}
+
+.rows dt {
+  font-weight: 700;
+}
+
+.rows dd {
+  margin: 0;
+  text-align: right;
+  color: #3c5153;
+}
+
+.law {
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #e9eeea;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* the form itself is a page of the WooCommerce build */
+.doc {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
