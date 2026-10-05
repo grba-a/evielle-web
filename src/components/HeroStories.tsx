@@ -36,7 +36,8 @@ export default function HeroStories() {
   const press = useRef<{ x: number; y: number; t: ReturnType<typeof setTimeout> | undefined; held: boolean } | null>(null);
 
   const running = onScreen && !held && !userPaused && !reduce;
-  const go = useCallback((n: number) => setIndex((n + STORIES.length) % STORIES.length), []);
+  // Functional updates, so two fast taps move two stories instead of reading a stale index.
+  const step = useCallback((d: number) => setIndex((i) => (i + d + STORIES.length) % STORIES.length), []);
 
   useEffect(() => {
     const mq = matchMedia("(prefers-reduced-motion: reduce)");
@@ -75,10 +76,10 @@ export default function HeroStories() {
     if (!fill) return;
     if (reduce) { fill.style.transform = "scaleX(1)"; anim.current = null; return; }
     const a = fill.animate([{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], { duration: DURATION, easing: "linear", fill: "forwards" });
-    a.onfinish = () => go(index + 1);
+    a.onfinish = () => step(1);
     a.pause();
     anim.current = a;
-  }, [index, reduce, go]);
+  }, [index, reduce, step]);
 
   // Play or hold the current story.
   useEffect(() => {
@@ -104,10 +105,10 @@ export default function HeroStories() {
     clearTimeout(p.t);
     if (p.held) { setHeld(false); return; }
     const dx = e.clientX - p.x, dy = e.clientY - p.y;
-    if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(dy)) { go(index + (dx < 0 ? 1 : -1)); return; }
+    if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(dy)) { step(dx < 0 ? 1 : -1); return; }
     if (Math.abs(dy) > SWIPE_PX) return; // a vertical drag is a page scroll, not a tap
     const r = e.currentTarget.getBoundingClientRect();
-    go(index + (e.clientX - r.left < r.width * 0.3 ? -1 : 1));
+    step(e.clientX - r.left < r.width * 0.3 ? -1 : 1);
   };
   const onPointerCancel = () => {
     if (press.current) clearTimeout(press.current.t);
@@ -115,8 +116,8 @@ export default function HeroStories() {
     setHeld(false);
   };
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowRight") { e.preventDefault(); go(index + 1); }
-    if (e.key === "ArrowLeft") { e.preventDefault(); go(index - 1); }
+    if (e.key === "ArrowRight") { e.preventDefault(); step(1); }
+    if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
   };
 
   const story = STORIES[index];
@@ -195,7 +196,7 @@ export default function HeroStories() {
             {s.kind === "intro" ? (
               <>
                 <h1 className={styles.headline}>{HEADLINE}</h1>
-                <button type="button" className={styles.btn} onClick={() => go(1)}>{CTA}</button>
+                <button type="button" className={styles.btn} onClick={() => step(1)}>{CTA}</button>
               </>
             ) : (
               <>
@@ -212,7 +213,7 @@ export default function HeroStories() {
         ))}
 
         <div className={styles.controls}>
-          <button type="button" className={styles.ctl} onClick={() => go(index - 1)} aria-label="Prethodna priča">
+          <button type="button" className={styles.ctl} onClick={() => step(-1)} aria-label="Prethodna priča">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14.5 6l-6 6 6 6" /></svg>
           </button>
           <button
@@ -228,7 +229,7 @@ export default function HeroStories() {
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7" y="5.5" width="3.4" height="13" rx="1" /><rect x="13.6" y="5.5" width="3.4" height="13" rx="1" /></svg>
             )}
           </button>
-          <button type="button" className={styles.ctl} onClick={() => go(index + 1)} aria-label="Sljedeća priča">
+          <button type="button" className={styles.ctl} onClick={() => step(1)} aria-label="Sljedeća priča">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9.5 6l6 6-6 6" /></svg>
           </button>
         </div>
