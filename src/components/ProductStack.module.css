@@ -97,10 +97,12 @@
     font-size: 3.4rem;
   }
 
+  /* Cards share the grid's two rows (subgrid), so all three colour strips take the height of the tallest one. */
   .grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    grid-template-rows: auto auto;
+    column-gap: 20px;
   }
 
   .card {
@@ -108,11 +110,21 @@
     top: auto;
     margin: 0;
     height: auto;
-    grid-template-rows: auto auto;
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+    row-gap: 0;
     box-shadow: none;
   }
 
   .image {
     aspect-ratio: 4 / 5;
+  }
+
+  /* Names start on the same line in every strip; the button sits under the text, so it never gets cut at narrow widths. */
+  .info {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
   }
 }
