@@ -3,17 +3,30 @@
 :root {
   --sea-deep: #0b3433;
   --limestone: #edf0ec;
+  --ink: #10292a;
+}
+
+/* Lets the story shade fade between product colours instead of jumping. */
+@property --shade {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #0b3433;
 }
 
 @theme inline {
   --color-sea-deep: var(--sea-deep);
   --color-limestone: var(--limestone);
-  --font-display: var(--font-display);
-  --font-sans: var(--font-body);
+  --color-ink: var(--ink);
+  --font-display: var(--ff-display);
+  --font-sans: var(--ff-body);
+}
+
+html {
+  background: var(--limestone);
 }
 
 body {
-  background: var(--sea-deep);
-  color: var(--limestone);
-  font-family: var(--font-body), "Helvetica Neue", Arial, sans-serif;
+  background: var(--limestone);
+  color: var(--ink);
+  font-family: var(--ff-body), "Helvetica Neue", Arial, sans-serif;
 }

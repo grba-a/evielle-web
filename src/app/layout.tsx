@@ -3,19 +3,19 @@ import { Tenor_Sans, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 
 const display = Tenor_Sans({
-  variable: "--font-display",
+  variable: "--ff-display",
   weight: "400",
   subsets: ["latin", "latin-ext"],
 });
 
 const body = Hanken_Grotesk({
-  variable: "--font-body",
+  variable: "--ff-body",
   subsets: ["latin", "latin-ext"],
 });
 
 export const metadata: Metadata = {
   title: "Evielle Skin Care",
-  description: "Evielle, njega tijela za ljeto. Web trgovina uskoro.",
+  description: "Body Butter, Refreshing Mist i Dry Body Oil. Evielle, njega tijela za ljeto.",
 };
 
 export const viewport: Viewport = {
