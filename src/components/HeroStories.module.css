@@ -184,7 +184,7 @@
   position: absolute;
   z-index: 3;
   left: 20px;
-  right: 76px;
+  right: 20px;
   bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
   display: flex;
   flex-direction: column;
@@ -301,7 +301,8 @@
   outline-offset: 3px;
 }
 
-/* Prev and next are the tap zones on a phone; only pause stays visible there (WCAG 2.2.2). */
+/* Petar removed the visible buttons (2026-10-05): taps, swipes, hold and arrow keys steer the stories.
+   They stay for keyboard and screen-reader users and appear only when focused (WCAG 2.2.2 pause control). */
 .controls {
   position: absolute;
   z-index: 4;
@@ -309,6 +310,17 @@
   bottom: calc(env(safe-area-inset-bottom, 0px) + 32px);
   display: flex;
   gap: 4px;
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.controls:focus-within {
+  clip-path: none;
+  width: auto;
+  height: auto;
+  overflow: visible;
 }
 
 .ctl {
@@ -335,11 +347,6 @@
 .ctl svg {
   width: 18px;
   height: 18px;
-}
-
-.ctl:first-child,
-.ctl:last-child {
-  display: none;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -389,11 +396,6 @@
   .controls {
     right: max(24px, calc(50% - 640px));
     bottom: 60px;
-  }
-
-  .ctl:first-child,
-  .ctl:last-child {
-    display: grid;
   }
 
   .shade {
