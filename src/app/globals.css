@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+:root {
+  --sea-deep: #0b3433;
+  --limestone: #edf0ec;
+}
+
+@theme inline {
+  --color-sea-deep: var(--sea-deep);
+  --color-limestone: var(--limestone);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+}
+
+body {
+  background: var(--sea-deep);
+  color: var(--limestone);
+  font-family: var(--font-body), "Helvetica Neue", Arial, sans-serif;
+}
