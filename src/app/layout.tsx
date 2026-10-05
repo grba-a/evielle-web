@@ -13,9 +13,22 @@ const body = Hanken_Grotesk({
   subsets: ["latin", "latin-ext"],
 });
 
+const TITLE = "Evielle Skin Care · ulje, maslac i sprej za tijelo";
+const DESCRIPTION = "Body Butter, Refreshing Mist i Dry Body Oil: maslac, osvježavajući sprej i suho ulje za tijelo.";
+
+// This site is the design prototype; the shop itself is built in WordPress + WooCommerce, so it stays out of search.
 export const metadata: Metadata = {
-  title: "Evielle Skin Care",
-  description: "Body Butter, Refreshing Mist i Dry Body Oil. Evielle, njega tijela za ljeto.",
+  metadataBase: new URL("https://evielle-web.vercel.app"),
+  title: TITLE,
+  description: DESCRIPTION,
+  openGraph: {
+    type: "website",
+    locale: "hr_HR",
+    siteName: "Evielle Skin Care",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+  robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = {

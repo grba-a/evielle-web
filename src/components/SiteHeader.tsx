@@ -25,7 +25,7 @@ export default function SiteHeader() {
           <MenuIcon />
         </button>
         <a href="#hero" className={styles.wordmark} aria-label="Evielle, na vrh">Evielle</a>
-        <button type="button" className={styles.icon} onClick={() => open("cart")} aria-label={`Košarica, ${count} proizvoda`}>
+        <button type="button" className={styles.icon} data-bag onClick={() => open("cart")} aria-label={`Košarica, ${count} proizvoda`}>
           <BagIcon />
           {count > 0 && <span key={bump} className={styles.count}>{count}</span>}
         </button>

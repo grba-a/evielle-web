@@ -7,9 +7,19 @@ import SetFan from "@/components/SetFan";
 import SiteHeader from "@/components/SiteHeader";
 import TrustStrips from "@/components/TrustStrips";
 
+// Tells search engines that Evielle Skin Care is a brand of its own, not a misspelt Eveline (SEO review).
+const ORGANIZATION = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Evielle Skin Care",
+  alternateName: "Evielle",
+  url: "https://evielle-web.vercel.app",
+};
+
 export default function Home() {
   return (
     <CartProvider>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION).replace(/</g, "\\u003c") }} />
       <SiteHeader />
       <main>
         <HeroStories />

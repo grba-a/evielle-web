@@ -1,9 +1,10 @@
 .footer {
   position: relative;
-  min-height: min(150vw, 100svh);
+  min-height: min(160vw, 100svh);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  padding-top: 140px;
   color: #fff;
   isolation: isolate;
 }
@@ -11,11 +12,21 @@
 .footer img {
   position: absolute;
   inset: 0;
-  z-index: -2;
+  z-index: -3;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 50% 35%;
+  object-position: 35% 18%;
+}
+
+/* Super 8: a static grain layer over the film, no blend mode, no animation (design review D7) */
+.grain {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: url(/media/grain.png) 0 0 / 160px;
+  opacity: 0.09;
+  pointer-events: none;
 }
 
 .footer::after {
@@ -23,7 +34,7 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(180deg, rgb(0 0 0 / 0.05) 30%, rgb(8 24 24 / 0.88));
+  background: linear-gradient(180deg, rgb(0 0 0 / 0.05) 30%, rgb(8 24 24 / 0.9));
 }
 
 .content {
@@ -38,6 +49,8 @@
   font-family: var(--ff-display), sans-serif;
   font-size: clamp(2.8rem, 12vw, 4.8rem);
   line-height: 0.98;
+  letter-spacing: -0.02em;
+  word-spacing: -0.1em;
 }
 
 .content nav {
@@ -62,15 +75,36 @@
 }
 
 .legal {
-  margin: 0;
+  display: grid;
+  gap: 8px;
   font-size: 13px;
   line-height: 1.5;
-  color: rgb(255 255 255 / 0.82);
+  color: rgb(255 255 255 / 0.85);
+}
+
+.legal p {
+  margin: 0;
+}
+
+.docs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.docs span {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 @media (min-width: 900px) {
   .footer {
-    min-height: 720px;
+    min-height: 760px;
+    padding-top: 200px;
+  }
+
+  .footer img {
+    object-position: 50% 30%;
   }
 
   .content {

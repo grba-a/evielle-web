@@ -1,38 +1,69 @@
+/* Sits over the top of the footer photo: the section overlaps the footer by 96px (no sticky involved). */
 .section {
-  padding: 16px 20px 72px;
+  position: relative;
+  z-index: 1;
+  margin-bottom: -96px;
+  padding: 16px 20px 0;
   scroll-margin-top: 56px;
 }
 
 .card {
   position: relative;
+  isolation: isolate;
   max-width: 620px;
   margin: 0 auto;
   padding: 22px;
-  border-radius: 12px;
-  background: #f7f1e6;
   color: #10292a;
-  box-shadow: 0 14px 40px -20px rgb(0 0 0 / 0.4);
+}
+
+/* only the paper is tilted, the form stays level so the caret does not skew */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 3px;
+  background: #f7f1e6;
+  box-shadow: 0 18px 44px -20px rgb(0 0 0 / 0.5);
   transform: rotate(-1.2deg);
 }
 
-.stamp {
+.postmark {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 68px;
-  aspect-ratio: 4 / 5;
-  border: 5px dotted #f7f1e6;
-  outline: 1.5px solid #b4502f;
-  background: url(/media/stamp.jpg) center / cover;
+  top: 18px;
+  right: 18px;
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px solid #b4502f;
+  color: #b4502f;
+  transform: rotate(-10deg);
+}
+
+.postmark::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  border: 1px dashed rgb(180 80 47 / 0.5);
+}
+
+.postmark svg {
+  width: 26px;
+  height: 26px;
 }
 
 .title {
-  max-width: 12ch;
-  margin: 6px 0 16px;
+  max-width: 11ch;
+  margin: 4px 0 16px;
   font-family: var(--ff-display), sans-serif;
   font-weight: 400;
   font-size: clamp(1.9rem, 8vw, 2.6rem);
   line-height: 1.02;
+  letter-spacing: -0.02em;
+  word-spacing: -0.1em;
   text-wrap: balance;
 }
 
@@ -57,7 +88,7 @@
   height: 52px;
   min-width: 0;
   padding: 0 20px;
-  border: 1.5px solid #d9cdb9;
+  border: 1.5px solid #948670;
   border-radius: 99px;
   background: #fffaf2;
   color: #10292a;
@@ -65,12 +96,13 @@
 }
 
 .form input::placeholder {
-  color: #7a6f60;
+  color: #6f6455;
 }
 
 .form input:focus {
   outline: none;
   border-color: #10292a;
+  box-shadow: 0 0 0 3px rgb(16 41 42 / 0.18);
 }
 
 .err {
@@ -85,7 +117,7 @@
   border: 0;
   border-radius: 99px;
   background: #a6472a;
-  color: #fbede4;
+  color: #fff;
   font: 600 16px/1 var(--ff-body), sans-serif;
   cursor: pointer;
   transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
@@ -113,17 +145,19 @@
 
 @media (min-width: 900px) {
   .section {
-    padding: 40px 20px 120px;
+    margin-bottom: -140px;
+    padding-top: 40px;
   }
 
   .card {
     padding: 40px;
   }
 
-  .stamp {
-    top: 32px;
-    right: 32px;
-    width: 92px;
+  .postmark {
+    top: 30px;
+    right: 30px;
+    width: 84px;
+    height: 84px;
   }
 
   .form {

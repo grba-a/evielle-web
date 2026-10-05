@@ -1,11 +1,13 @@
 "use client";
 
 import { useId, useState } from "react";
+import EMark from "./EMark";
 import styles from "./NewsletterPostcard.module.css";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-// No list provider is connected yet, so the form says plainly that nothing is saved instead of faking a sign-up.
+// The postcard lies across the top of the footer photo (design review D11). The paper is tilted, the form stays
+// level. No list is connected (the shop is built in WooCommerce later), so the form says plainly that nothing is saved.
 export default function NewsletterPostcard() {
   const id = useId();
   const [error, setError] = useState("");
@@ -26,11 +28,11 @@ export default function NewsletterPostcard() {
   return (
     <section id="newsletter" className={styles.section} aria-labelledby="newsletter-naslov">
       <div className={styles.card}>
-        <div className={styles.stamp} aria-hidden="true" />
+        <span className={styles.postmark} aria-hidden="true"><EMark /></span>
         <h2 id="newsletter-naslov" className={styles.title}>Pošalji nam adresu, šaljemo ljeto.</h2>
         <hr className={styles.line} />
         {done ? (
-          <p className={styles.ok} role="status">Hvala. Newsletter otvaramo uskoro, pa tvoju adresu zasad ne spremamo.</p>
+          <p className={styles.ok} role="status">Hvala. Ovo je prototip dizajna, pa tvoju adresu zasad ne spremamo.</p>
         ) : (
           <form className={styles.form} onSubmit={onSubmit} noValidate>
             <label htmlFor={`${id}-email`}>E-mail</label>

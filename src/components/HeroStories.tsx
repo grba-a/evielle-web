@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PRICE_PENDING, PRODUCTS, WIDE_QUERY, type Product } from "@/lib/products";
+import { PRODUCTS, WIDE_QUERY, type Product } from "@/lib/products";
 import { useCart } from "./cart";
+import Ph from "./Ph";
 import { BagIcon, MenuIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon } from "./icons";
 import styles from "./HeroStories.module.css";
 
@@ -39,12 +40,16 @@ const HEADLINE = "Ljeto koje ostaje na koži.";
 const CTA = "Upoznaj sva tri";
 
 export default function HeroStories() {
-  const { add, open, count, bump } = useCart();
-  const [index, setIndex] = useState(0);
+  const { add, open, count, bump, panel } = useCart();
+  // prev keeps the outgoing layer painted under the incoming one until the fade ends (motion A2).
+  // seen: media is fetched for the current and the next story only (review T1); once fetched it stays.
+  const [{ index, prev, seen }, setPos] = useState({ index: 0, prev: -1, seen: [0, 1] });
   const [held, setHeld] = useState(false);
   const [userPaused, setUserPaused] = useState(false);
   const [onScreen, setOnScreen] = useState(true);
   const [reduce, setReduce] = useState(false);
+  // Stories start moving only after the page has loaded and gone idle (Lighthouse SI, review T2).
+  const [ready, setReady] = useState(false);
   // null until mounted: the right clip (portrait or landscape) is chosen on the client, the poster covers the wait.
   const [wide, setWide] = useState<boolean | null>(null);
 
@@ -54,9 +59,19 @@ export default function HeroStories() {
   const anim = useRef<Animation | null>(null);
   const press = useRef<{ x: number; y: number; t: ReturnType<typeof setTimeout> | undefined; held: boolean } | null>(null);
 
-  const running = onScreen && !held && !userPaused && !reduce;
+  // Stories wait behind an open cart, menu or product sheet (motion A14).
+  const running = ready && onScreen && !held && !userPaused && !reduce && panel === null;
   // Functional updates, so two fast taps move two stories instead of reading a stale index.
-  const step = useCallback((d: number) => setIndex((i) => (i + d + STORIES.length) % STORIES.length), []);
+  const step = useCallback(
+    (d: number) =>
+      setPos((p) => {
+        const n = STORIES.length;
+        const i = (p.index + d + n) % n;
+        const seen = [...new Set([...p.seen, i, (i + 1) % n])];
+        return { prev: p.index, index: i, seen };
+      }),
+    [],
+  );
 
   useEffect(() => {
     const rm = matchMedia("(prefers-reduced-motion: reduce)");
@@ -65,7 +80,14 @@ export default function HeroStories() {
     sync();
     rm.addEventListener("change", sync);
     wq.addEventListener("change", sync);
-    return () => { rm.removeEventListener("change", sync); wq.removeEventListener("change", sync); };
+    const go = () => {
+      const idle = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
+      if (idle) idle(() => setReady(true), { timeout: 1500 });
+      else setTimeout(() => setReady(true), 600);
+    };
+    if (document.readyState === "complete") go();
+    else window.addEventListener("load", go, { once: true });
+    return () => { rm.removeEventListener("change", sync); wq.removeEventListener("change", sync); window.removeEventListener("load", go); };
   }, []);
 
   // Stop everything when the hero leaves the screen or the tab is hidden.
@@ -86,7 +108,6 @@ export default function HeroStories() {
       if (!v) return;
       if (i === index) v.currentTime = 0;
       else v.pause();
-      if (i === index + 1) v.preload = "auto";
     });
     fills.current.forEach((f, i) => {
       if (!f) return;
@@ -113,7 +134,7 @@ export default function HeroStories() {
       anim.current?.pause();
       v?.pause();
     }
-  }, [running, index, wide]);
+  }, [running, index, wide, seen]);
 
   const onPointerDown = (e: React.PointerEvent) => {
     if ((e.target as HTMLElement).closest("button, a")) return;
@@ -142,61 +163,68 @@ export default function HeroStories() {
     if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
   };
 
-  const story = STORIES[index];
-
   return (
-    <section
-      ref={root}
-      id="hero"
-      className={styles.hero}
-      aria-roledescription="carousel"
-      aria-label="Evielle u četiri priče"
-      onKeyDown={onKeyDown}
-      style={{ "--shade": story.shade } as React.CSSProperties}
-    >
+    <section ref={root} id="hero" className={styles.hero} aria-roledescription="carousel" aria-label="Evielle u četiri priče" onKeyDown={onKeyDown}>
       <div
         className={styles.stage}
         data-held={held || userPaused ? "" : undefined}
+        data-still={running ? undefined : ""}
+        data-moved={prev === -1 ? undefined : ""}
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
         onPointerLeave={onPointerCancel}
         onContextMenu={(e) => e.preventDefault()}
       >
-        {STORIES.map((s, i) => (
-          <div key={s.label} className={styles.media} data-on={i === index ? "" : undefined} aria-hidden="true">
-            <picture>
-              <source media={WIDE_QUERY} srcSet={s.posterWide} />
-                    <img src={s.poster} alt="" fetchPriority={i === 0 ? "high" : "auto"} loading={i === 0 ? "eager" : "lazy"} />
-            </picture>
-            <video
-              ref={(el) => { videos.current[i] = el; }}
-              src={wide === null ? undefined : wide ? s.videoWide : s.video}
-              muted
-              loop
-              playsInline
-              preload={i < 2 ? "auto" : "metadata"}
-              onPlaying={(e) => e.currentTarget.setAttribute("data-playing", "")}
-              onEmptied={(e) => e.currentTarget.removeAttribute("data-playing")}
-            />
-          </div>
-        ))}
-        <div className={styles.shade} aria-hidden="true" />
+        {STORIES.map((s, i) => {
+          const load = seen.includes(i);
+          return (
+            // each layer carries its own shade, so the colour fades with the picture instead of jumping (motion A1)
+            <div key={s.label} className={styles.media} data-on={i === index ? "" : undefined} data-prev={i === prev && i !== index ? "" : undefined} style={{ "--shade": s.shade } as React.CSSProperties} aria-hidden="true">
+              {load && (
+                <picture>
+                  <source media={WIDE_QUERY} srcSet={s.posterWide} />
+                  <img src={s.poster} alt="" fetchPriority={i === 0 ? "high" : "auto"} />
+                </picture>
+              )}
+              <video
+                ref={(el) => { videos.current[i] = el; }}
+                src={load && wide !== null ? (wide ? s.videoWide : s.video) : undefined}
+                muted
+                loop
+                playsInline
+                preload={load ? "auto" : "none"}
+                onPlaying={(e) => e.currentTarget.setAttribute("data-playing", "")}
+                onEmptied={(e) => e.currentTarget.removeAttribute("data-playing")}
+              />
+            </div>
+          );
+        })}
+        <div className={styles.grain} aria-hidden="true" />
 
-        <div className={styles.bars} aria-hidden="true">
-          {STORIES.map((s, i) => (
-            <span key={s.label} className={styles.bar}>
-              <span ref={(el) => { fills.current[i] = el; }} className={styles.fill} />
-            </span>
-          ))}
+        <div className={styles.top}>
+          <div className={styles.bars} aria-hidden="true">
+            {STORIES.map((s, i) => (
+              <span key={s.label} className={styles.bar}>
+                <span ref={(el) => { fills.current[i] = el; }} className={styles.fill} />
+              </span>
+            ))}
+          </div>
+          <button
+            type="button"
+            className={styles.pause}
+            onClick={() => setUserPaused((p) => !p)}
+            aria-label={userPaused ? "Pokreni priče" : "Zaustavi priče"}
+            aria-pressed={userPaused}
+          >
+            {userPaused ? <PlayIcon /> : <PauseIcon />}
+          </button>
         </div>
 
         <header className={styles.nav}>
-          <button type="button" className={styles.icon} onClick={() => open("menu")} aria-label="Izbornik">
-            <MenuIcon />
-          </button>
+          <button type="button" className={styles.icon} onClick={() => open("menu")} aria-label="Izbornik"><MenuIcon /></button>
           <span className={styles.wordmark}>Evielle</span>
-          <button type="button" className={styles.icon} onClick={() => open("cart")} aria-label={`Košarica, ${count} proizvoda`}>
+          <button type="button" className={styles.icon} data-bag onClick={() => open("cart")} aria-label={`Košarica, ${count} proizvoda`}>
             <BagIcon />
             {count > 0 && <span key={bump} className={styles.count}>{count}</span>}
           </button>
@@ -219,34 +247,19 @@ export default function HeroStories() {
               </>
             ) : (
               <>
-                <span className={styles.kind}>
-                  <i style={{ background: s.product.color }} />
-                  {s.product.variant}
-                </span>
-                <h2 className={styles.name}>{s.product.name}</h2>
-                <p className={styles.meta}>{[s.product.size, PRICE_PENDING].filter(Boolean).join(" · ")}</p>
-                <button type="button" className={styles.btn} onClick={() => add(s.product.id)}>U košaricu</button>
+                <span className={styles.kind}><i style={{ background: s.product.color }} />Prva serija · <Ph>datum</Ph></span>
+                <h2 className={styles.name} lang="en">{s.product.name}</h2>
+                <p className={styles.meta}>{[s.product.type, s.product.size].filter(Boolean).join(" · ")}</p>
+                <button type="button" className={styles.btn} onClick={(e) => add(s.product.id, e.currentTarget)}>U košaricu</button>
               </>
             )}
           </div>
         ))}
 
+        {/* keyboard and screen readers only: taps and swipes steer the stories on screen */}
         <div className={styles.controls}>
-          <button type="button" className={styles.ctl} onClick={() => step(-1)} aria-label="Prethodna priča">
-            <PrevIcon />
-          </button>
-          <button
-            type="button"
-            className={styles.ctl}
-            onClick={() => setUserPaused((p) => !p)}
-            aria-label={userPaused ? "Pokreni priče" : "Zaustavi priče"}
-            aria-pressed={userPaused}
-          >
-            {userPaused ? <PlayIcon /> : <PauseIcon />}
-          </button>
-          <button type="button" className={styles.ctl} onClick={() => step(1)} aria-label="Sljedeća priča">
-            <NextIcon />
-          </button>
+          <button type="button" className={styles.ctl} onClick={() => step(-1)} aria-label="Prethodna priča"><PrevIcon /></button>
+          <button type="button" className={styles.ctl} onClick={() => step(1)} aria-label="Sljedeća priča"><NextIcon /></button>
         </div>
       </div>
     </section>

@@ -1,20 +1,25 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { ITEMS, type ItemId } from "@/lib/products";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { flyToBag } from "@/lib/flyToBag";
+import { ITEMS, type ItemId, type Product } from "@/lib/products";
 import CartDrawer from "./CartDrawer";
+import ProductSheet from "./ProductSheet";
 import SiteMenu from "./SiteMenu";
 import styles from "./cart.module.css";
 
-type Panel = "cart" | "menu" | null;
+type Panel = "cart" | "menu" | "product" | null;
 type Cart = {
   lines: Partial<Record<ItemId, number>>;
   count: number;
   bump: number;
-  add: (id: ItemId) => void;
+  add: (id: ItemId, from?: HTMLElement | null) => void;
   setQty: (id: ItemId, qty: number) => void;
+  swapToSet: () => void;
   panel: Panel;
+  product: Product["id"] | null;
   open: (p: Exclude<Panel, null>) => void;
+  openProduct: (id: Product["id"]) => void;
   close: () => void;
 };
 
@@ -24,25 +29,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [lines, setLines] = useState<Partial<Record<ItemId, number>>>({});
   const [bump, setBump] = useState(0);
   const [panel, setPanel] = useState<Panel>(null);
-  const [toast, setToast] = useState<string | null>(null);
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [product, setProduct] = useState<Product["id"] | null>(null);
+  const [said, setSaid] = useState("");
 
-  const add = useCallback((id: ItemId) => {
-    setLines((l) => ({ ...l, [id]: (l[id] ?? 0) + 1 }));
-    setBump((b) => b + 1);
-    setToast(`${ITEMS[id].name} je u košarici`);
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setToast(null), 1800);
+  // The drop flies to the bag first; the count changes when it lands.
+  const add = useCallback((id: ItemId, from?: HTMLElement | null) => {
+    const land = () => {
+      setLines((l) => ({ ...l, [id]: (l[id] ?? 0) + 1 }));
+      setBump((b) => b + 1);
+      setSaid(`${ITEMS[id].name} je u košarici`);
+    };
+    if (from) flyToBag(from, ITEMS[id].color).then(land);
+    else land();
   }, []);
 
-  const setQty = useCallback((id: ItemId, qty: number) => {
-    setLines((l) => ({ ...l, [id]: Math.max(0, qty) }));
-  }, []);
+  const setQty = useCallback((id: ItemId, qty: number) => setLines((l) => ({ ...l, [id]: Math.max(0, qty) })), []);
+  const swapToSet = useCallback(() => setLines((l) => ({ set: (l.set ?? 0) + 1, gift: l.gift })), []);
 
-  const open = useCallback((p: Exclude<Panel, null>) => {
-    setToast(null);
-    setPanel(p);
-  }, []);
+  const open = useCallback((p: Exclude<Panel, null>) => setPanel(p), []);
+  const openProduct = useCallback((id: Product["id"]) => { setProduct(id); setPanel("product"); }, []);
   const close = useCallback(() => setPanel(null), []);
 
   // The page behind an open sheet must not scroll, and Escape closes it.
@@ -56,20 +61,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return () => { html.style.overflow = prev; window.removeEventListener("keydown", onKey); };
   }, [panel]);
 
+  // ?p=butter opens that product (ad landing).
+  useEffect(() => {
+    const p = new URLSearchParams(location.search).get("p");
+    if (p === "butter" || p === "mist" || p === "oil") requestAnimationFrame(() => openProduct(p));
+  }, [openProduct]);
+
   const value = useMemo(
-    () => ({ lines, add, setQty, bump, panel, open, close, count: Object.values(lines).reduce((n, q) => n + (q ?? 0), 0) }),
-    [lines, add, setQty, bump, panel, open, close],
+    () => ({
+      lines, add, setQty, swapToSet, bump, panel, product, open, openProduct, close,
+      count: Object.values(lines).reduce((n, q) => n + (q ?? 0), 0),
+    }),
+    [lines, add, setQty, swapToSet, bump, panel, product, open, openProduct, close],
   );
 
   return (
     <CartContext.Provider value={value}>
       {children}
-      <div className={styles.scrim} data-on={panel === "cart" ? "" : undefined} onClick={close} aria-hidden="true" />
+      <div className={styles.scrim} data-on={panel === "cart" || panel === "product" ? "" : undefined} onClick={close} aria-hidden="true" />
+      <ProductSheet />
       <CartDrawer />
       <SiteMenu />
-      <div className={styles.toast} data-on={toast ? "" : undefined} role="status" aria-live="polite">
-        {toast}
-      </div>
+      <p className={styles.sr} role="status" aria-live="polite">{said}</p>
     </CartContext.Provider>
   );
 }
@@ -83,7 +96,7 @@ export function useCart() {
 export function AddToCart({ id, className, children }: { id: ItemId; className?: string; children: React.ReactNode }) {
   const { add } = useCart();
   return (
-    <button type="button" className={className} onClick={() => add(id)}>
+    <button type="button" className={className} onClick={(e) => add(id, e.currentTarget)}>
       {children}
     </button>
   );

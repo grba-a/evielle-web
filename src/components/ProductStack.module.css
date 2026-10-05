@@ -1,5 +1,5 @@
 .section {
-  padding: 48px 0 16px;
+  padding: clamp(72px, 10vw, 136px) 0 16px;
   scroll-margin-top: 56px;
 }
 
@@ -9,29 +9,81 @@
   font-weight: 400;
   font-size: clamp(2.4rem, 10vw, 3.4rem);
   line-height: 1.02;
+  letter-spacing: -0.02em;
+  word-spacing: -0.1em;
 }
 
+.grid {
+  view-timeline: --deck block;
+}
+
+/* The card is the label: 8px of label colour around the photo, concentric corners (28 - 8 = 20). */
 .card {
   position: sticky;
-  top: calc(env(safe-area-inset-top, 0px) + 66px);
+  top: calc(env(safe-area-inset-top, 0px) + 66px + var(--i) * 12px);
   margin: 0 16px 20px;
-  height: min(124vw, 74svh);
+  height: min(124vw, 72svh);
   display: grid;
   grid-template-rows: 1fr auto;
+  padding: 8px;
   border-radius: 28px;
-  overflow: hidden;
+  overflow: clip;
   background: var(--pc);
   color: var(--pi);
   box-shadow: 0 -16px 40px -24px rgb(0 0 0 / 0.35);
+  transform-origin: 50% 0;
+}
+
+/* dim = overlay opacity, never a filter */
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #0b3433;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .image {
   position: relative;
   min-height: 0;
+  border: 0;
+  padding: 0;
+  border-radius: 20px;
+  overflow: clip;
+  cursor: pointer;
+  background: rgb(0 0 0 / 0.08);
 }
 
 .image img {
   object-fit: cover;
+}
+
+.image:focus-visible,
+.btn:focus-visible,
+.more:focus-visible {
+  outline: 2px solid var(--pi);
+  outline-offset: 3px;
+}
+
+.glint {
+  position: absolute;
+  inset: -10% -60%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  transform: translateX(-70%);
+  background: linear-gradient(105deg, transparent 43%, rgb(255 214 150 / 0) 44.5%, rgb(255 226 170 / 0.42) 48.5%, rgb(255 248 230 / 0.9) 50%, rgb(255 214 150 / 0.3) 52%, transparent 55%, transparent 58.5%, rgb(255 236 200 / 0.28) 59.5%, transparent 61%);
+}
+
+.glint[data-play] {
+  animation: glint 1200ms cubic-bezier(0.45, 0, 0.2, 1) both;
+}
+
+@keyframes glint {
+  to {
+    transform: translateX(70%);
+  }
 }
 
 .info {
@@ -39,10 +91,10 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 12px;
-  padding: 20px;
+  padding: 16px 12px 12px;
 }
 
-.info > div {
+.info > div:first-child {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -51,7 +103,6 @@
 
 .info span {
   font-size: 14px;
-  font-variant-numeric: tabular-nums;
 }
 
 .name {
@@ -60,17 +111,26 @@
   font-weight: 400;
   font-size: clamp(1.8rem, 8vw, 2.2rem);
   line-height: 1;
+  letter-spacing: -0.02em;
+  word-spacing: -0.1em;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
 }
 
 .btn {
   flex: none;
-  height: 50px;
+  height: 52px;
   padding: 0 22px;
   border: 0;
   border-radius: 99px;
   background: var(--pi);
   color: var(--pc);
-  font: 600 15px/1 var(--ff-body), sans-serif;
+  font: 600 16px/1 var(--ff-body), sans-serif;
   cursor: pointer;
   white-space: nowrap;
   transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
@@ -80,16 +140,68 @@
   transform: scale(0.97);
 }
 
-.btn:focus-visible {
-  outline: 2px solid var(--pi);
-  outline-offset: 3px;
+.more {
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: 600 14px var(--ff-body), sans-serif;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* Phone deck: earlier cards recede and darken while the next one slides over (scroll-driven, no JS). */
+@supports (animation-timeline: view()) {
+  @media (max-width: 899px) and (prefers-reduced-motion: no-preference) {
+    .card:not(:last-child) {
+      animation: back linear both;
+      animation-timeline: --deck;
+      animation-range: exit-crossing calc(var(--i) * 33.333%) exit-crossing 66.666%;
+    }
+
+    .card:not(:last-child)::after {
+      animation: dim linear both;
+      animation-timeline: --deck;
+      animation-range: exit-crossing calc(var(--i) * 33.333%) exit-crossing 66.666%;
+    }
+  }
+
+  .glint {
+    animation: glint linear both;
+    animation-timeline: view();
+    animation-range: entry 55% contain 60%;
+  }
+}
+
+.card:nth-child(1) {
+  --s: 0.92;
+  --d: 0.38;
+}
+
+.card:nth-child(2) {
+  --s: 0.96;
+  --d: 0.2;
+}
+
+@keyframes back {
+  to {
+    transform: scale(var(--s));
+  }
+}
+
+@keyframes dim {
+  to {
+    opacity: var(--d);
+  }
 }
 
 @media (min-width: 900px) {
   .section {
     max-width: 1240px;
     margin: 0 auto;
-    padding: 96px 20px 40px;
+    padding: 110px 20px 40px;
   }
 
   .title {
@@ -120,11 +232,22 @@
     aspect-ratio: 4 / 5;
   }
 
-  /* Names start on the same line in every strip; the button sits under the text, so it never gets cut at narrow widths. */
   .info {
     flex-direction: column;
     align-items: flex-start;
     justify-content: space-between;
     gap: 18px;
+  }
+
+  .actions {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glint {
+    display: none;
   }
 }
