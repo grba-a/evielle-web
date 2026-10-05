@@ -1,5 +1,5 @@
 // Product facts come only from the labels in the client's film. Prices are not confirmed yet,
-// so the shop shows PRICE_PENDING until Petar sends them (never invent a price).
+// so the shop shows PRICE_PENDING until the client sends them (never invent a price).
 export const PRICE_PENDING = "Cijena uskoro";
 
 export type Product = {
@@ -13,8 +13,11 @@ export type Product = {
   ink: string;
   /** Deep tone of the label colour: the story shade behind white text. */
   shade: string;
+  /** Portrait story clip for phones, landscape for wide screens. */
   video: string;
   poster: string;
+  videoWide: string;
+  posterWide: string;
   image: string;
 };
 
@@ -29,6 +32,8 @@ export const PRODUCTS: Product[] = [
     shade: "#5A2418",
     video: "/media/hero/butter.mp4",
     poster: "/media/hero/butter.jpg",
+    videoWide: "/media/hero/butter-wide.mp4",
+    posterWide: "/media/hero/butter-wide.jpg",
     image: "/media/products/butter.jpg",
   },
   {
@@ -40,6 +45,8 @@ export const PRODUCTS: Product[] = [
     shade: "#1F4A3F",
     video: "/media/hero/mist.mp4",
     poster: "/media/hero/mist.jpg",
+    videoWide: "/media/hero/mist-wide.mp4",
+    posterWide: "/media/hero/mist-wide.jpg",
     image: "/media/products/mist.jpg",
   },
   {
@@ -51,8 +58,33 @@ export const PRODUCTS: Product[] = [
     shade: "#4A1A0C",
     video: "/media/hero/oil.mp4",
     poster: "/media/hero/oil.jpg",
+    videoWide: "/media/hero/oil-wide.mp4",
+    posterWide: "/media/hero/oil-wide.jpg",
     image: "/media/products/oil.jpg",
   },
 ];
 
-export const productMeta = (p: Product) => [p.variant, p.size].filter(Boolean).join(" · ");
+/** The three products in the cotton drawstring bag; it has its own price (client, 2026-10-05). */
+export const SET = {
+  id: "set" as const,
+  name: "Set u pamučnoj vrećici",
+  variant: "Sva tri proizvoda",
+  image: "/media/set.jpg",
+};
+
+export type ItemId = Product["id"] | typeof SET.id;
+
+export const ITEMS: Record<ItemId, { name: string; meta: string; image: string }> = {
+  ...(Object.fromEntries(PRODUCTS.map((p) => [p.id, { name: p.name, meta: productMeta(p), image: p.image }])) as Record<
+    Product["id"],
+    { name: string; meta: string; image: string }
+  >),
+  set: { name: SET.name, meta: SET.variant, image: SET.image },
+};
+
+export function productMeta(p: Pick<Product, "variant" | "size">) {
+  return [p.variant, p.size].filter(Boolean).join(" · ");
+}
+
+/** Wide screens get landscape clips; the same query decides the hero layout in CSS. */
+export const WIDE_QUERY = "(min-width: 900px), (orientation: landscape) and (min-width: 600px)";

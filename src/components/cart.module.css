@@ -2,7 +2,7 @@
   position: fixed;
   left: 50%;
   bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-  z-index: 60;
+  z-index: 80;
   padding: 14px 20px;
   border-radius: 999px;
   background: #10292a;
@@ -21,6 +21,21 @@
 .toast[data-on] {
   opacity: 1;
   transform: translate(-50%, 0);
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgb(6 20 20 / 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+.scrim[data-on] {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {

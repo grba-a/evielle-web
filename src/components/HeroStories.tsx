@@ -1,17 +1,34 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PRICE_PENDING, PRODUCTS, type Product } from "@/lib/products";
+import { PRICE_PENDING, PRODUCTS, WIDE_QUERY, type Product } from "@/lib/products";
 import { useCart } from "./cart";
+import { BagIcon, MenuIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon } from "./icons";
 import styles from "./HeroStories.module.css";
 
-type Story =
-  | { kind: "intro"; video: string; poster: string; shade: string; label: string }
-  | { kind: "product"; video: string; poster: string; shade: string; label: string; product: Product };
+type Media = { video: string; poster: string; videoWide: string; posterWide: string; shade: string; label: string };
+type Story = (Media & { kind: "intro" }) | (Media & { kind: "product"; product: Product });
 
 const STORIES: Story[] = [
-  { kind: "intro", video: "/media/hero/sea.mp4", poster: "/media/hero/sea.jpg", shade: "#0B3433", label: "Evielle" },
-  ...PRODUCTS.map((p) => ({ kind: "product" as const, video: p.video, poster: p.poster, shade: p.shade, label: p.name, product: p })),
+  {
+    kind: "intro",
+    video: "/media/hero/sea.mp4",
+    poster: "/media/hero/sea.jpg",
+    videoWide: "/media/hero/sea-wide.mp4",
+    posterWide: "/media/hero/sea-wide.jpg",
+    shade: "#0B3433",
+    label: "Evielle",
+  },
+  ...PRODUCTS.map((p) => ({
+    kind: "product" as const,
+    video: p.video,
+    poster: p.poster,
+    videoWide: p.videoWide,
+    posterWide: p.posterWide,
+    shade: p.shade,
+    label: p.name,
+    product: p,
+  })),
 ];
 
 const DURATION = 5200;
@@ -22,12 +39,14 @@ const HEADLINE = "Ljeto koje ostaje na koži.";
 const CTA = "Upoznaj sva tri";
 
 export default function HeroStories() {
-  const { add, count, bump } = useCart();
+  const { add, open, count, bump } = useCart();
   const [index, setIndex] = useState(0);
   const [held, setHeld] = useState(false);
   const [userPaused, setUserPaused] = useState(false);
   const [onScreen, setOnScreen] = useState(true);
   const [reduce, setReduce] = useState(false);
+  // null until mounted: the right clip (portrait or landscape) is chosen on the client, the poster covers the wait.
+  const [wide, setWide] = useState<boolean | null>(null);
 
   const root = useRef<HTMLElement>(null);
   const videos = useRef<(HTMLVideoElement | null)[]>([]);
@@ -40,11 +59,13 @@ export default function HeroStories() {
   const step = useCallback((d: number) => setIndex((i) => (i + d + STORIES.length) % STORIES.length), []);
 
   useEffect(() => {
-    const mq = matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setReduce(mq.matches);
+    const rm = matchMedia("(prefers-reduced-motion: reduce)");
+    const wq = matchMedia(WIDE_QUERY);
+    const sync = () => { setReduce(rm.matches); setWide(wq.matches); };
     sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
+    rm.addEventListener("change", sync);
+    wq.addEventListener("change", sync);
+    return () => { rm.removeEventListener("change", sync); wq.removeEventListener("change", sync); };
   }, []);
 
   // Stop everything when the hero leaves the screen or the tab is hidden.
@@ -63,7 +84,8 @@ export default function HeroStories() {
   useEffect(() => {
     videos.current.forEach((v, i) => {
       if (!v) return;
-      if (i === index) { v.currentTime = 0; } else { v.pause(); }
+      if (i === index) v.currentTime = 0;
+      else v.pause();
       if (i === index + 1) v.preload = "auto";
     });
     fills.current.forEach((f, i) => {
@@ -91,7 +113,7 @@ export default function HeroStories() {
       anim.current?.pause();
       v?.pause();
     }
-  }, [running, index]);
+  }, [running, index, wide]);
 
   const onPointerDown = (e: React.PointerEvent) => {
     if ((e.target as HTMLElement).closest("button, a")) return;
@@ -125,21 +147,15 @@ export default function HeroStories() {
   return (
     <section
       ref={root}
+      id="hero"
       className={styles.hero}
       aria-roledescription="carousel"
       aria-label="Evielle u četiri priče"
       onKeyDown={onKeyDown}
       style={{ "--shade": story.shade } as React.CSSProperties}
     >
-      <div className={styles.backdrop} aria-hidden="true">
-        {STORIES.map((s, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img key={s.poster} src={s.poster} alt="" data-on={i === index ? "" : undefined} />
-        ))}
-      </div>
-
       <div
-        className={styles.card}
+        className={styles.stage}
         data-held={held || userPaused ? "" : undefined}
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
@@ -148,17 +164,20 @@ export default function HeroStories() {
         onContextMenu={(e) => e.preventDefault()}
       >
         {STORIES.map((s, i) => (
-          <div key={s.video} className={styles.media} data-on={i === index ? "" : undefined} aria-hidden="true">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={s.poster} alt="" fetchPriority={i === 0 ? "high" : "auto"} loading={i === 0 ? "eager" : "lazy"} />
+          <div key={s.label} className={styles.media} data-on={i === index ? "" : undefined} aria-hidden="true">
+            <picture>
+              <source media={WIDE_QUERY} srcSet={s.posterWide} />
+                    <img src={s.poster} alt="" fetchPriority={i === 0 ? "high" : "auto"} loading={i === 0 ? "eager" : "lazy"} />
+            </picture>
             <video
               ref={(el) => { videos.current[i] = el; }}
-              src={s.video}
+              src={wide === null ? undefined : wide ? s.videoWide : s.video}
               muted
               loop
               playsInline
               preload={i < 2 ? "auto" : "metadata"}
               onPlaying={(e) => e.currentTarget.setAttribute("data-playing", "")}
+              onEmptied={(e) => e.currentTarget.removeAttribute("data-playing")}
             />
           </div>
         ))}
@@ -173,12 +192,12 @@ export default function HeroStories() {
         </div>
 
         <header className={styles.nav}>
-          <button type="button" className={styles.icon} aria-label="Izbornik">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M4 9h16M4 15h11" /></svg>
+          <button type="button" className={styles.icon} onClick={() => open("menu")} aria-label="Izbornik">
+            <MenuIcon />
           </button>
           <span className={styles.wordmark}>Evielle</span>
-          <button type="button" className={styles.icon} aria-label={`Košarica, ${count} proizvoda`}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" strokeLinecap="round" /></svg>
+          <button type="button" className={styles.icon} onClick={() => open("cart")} aria-label={`Košarica, ${count} proizvoda`}>
+            <BagIcon />
             {count > 0 && <span key={bump} className={styles.count}>{count}</span>}
           </button>
         </header>
@@ -214,7 +233,7 @@ export default function HeroStories() {
 
         <div className={styles.controls}>
           <button type="button" className={styles.ctl} onClick={() => step(-1)} aria-label="Prethodna priča">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14.5 6l-6 6 6 6" /></svg>
+            <PrevIcon />
           </button>
           <button
             type="button"
@@ -223,14 +242,10 @@ export default function HeroStories() {
             aria-label={userPaused ? "Pokreni priče" : "Zaustavi priče"}
             aria-pressed={userPaused}
           >
-            {userPaused ? (
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" /></svg>
-            ) : (
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7" y="5.5" width="3.4" height="13" rx="1" /><rect x="13.6" y="5.5" width="3.4" height="13" rx="1" /></svg>
-            )}
+            {userPaused ? <PlayIcon /> : <PauseIcon />}
           </button>
           <button type="button" className={styles.ctl} onClick={() => step(1)} aria-label="Sljedeća priča">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9.5 6l6 6-6 6" /></svg>
+            <NextIcon />
           </button>
         </div>
       </div>

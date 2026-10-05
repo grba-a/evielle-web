@@ -1,4 +1,4 @@
-/* Mobile first: the story card is the whole screen. From 900px it becomes a 9:16 card on a blurred backdrop. */
+/* Full screen at every width: portrait clips on phones, landscape clips on wide screens. */
 .hero {
   --ease: cubic-bezier(0.23, 1, 0.32, 1);
   position: relative;
@@ -10,14 +10,9 @@
   isolation: isolate;
 }
 
-.backdrop {
-  display: none;
-}
-
-.card {
+.stage {
   position: absolute;
   inset: 0;
-  container-type: size;
   overflow: hidden;
   background: #0c1d1e;
   color: #fff;
@@ -57,7 +52,7 @@
   opacity: 1;
 }
 
-/* A slow push-in while a story is on screen: the clips are short loops, this keeps them alive. */
+/* A slow push-in while a story is on screen keeps the short loops alive. */
 .media[data-on] img,
 .media[data-on] video {
   animation: push 6s var(--ease) both;
@@ -72,7 +67,7 @@
   }
 }
 
-/* The shade takes the deep tone of the product's label colour, so the text sits on brand colour, not on grey. */
+/* The shade takes the deep tone of the product's label colour, so text sits on brand colour, not grey. */
 .shade {
   position: absolute;
   inset: 0;
@@ -80,7 +75,6 @@
   background:
     linear-gradient(180deg, rgb(0 0 0 / 0.4) 0%, rgb(0 0 0 / 0) 24%),
     linear-gradient(0deg, var(--shade) 0%, color-mix(in oklab, var(--shade) 70%, transparent) 26%, transparent 58%);
-  transition: --shade 700ms ease;
 }
 
 .bars {
@@ -110,7 +104,7 @@
   transform-origin: 0 50%;
 }
 
-.card[data-held] .bars {
+.stage[data-held] .bars {
   opacity: 0.55;
   transition: opacity 200ms ease;
 }
@@ -242,12 +236,12 @@
 }
 
 .headline {
-  font-size: clamp(2.5rem, 11.5cqw, 4.2rem);
+  font-size: clamp(2.5rem, 11.5vw, 4.4rem);
   max-width: 11ch;
 }
 
 .name {
-  font-size: clamp(2.4rem, 11cqw, 4rem);
+  font-size: clamp(2.4rem, 11vw, 4.2rem);
 }
 
 .kind {
@@ -291,7 +285,9 @@
   font: 600 16px/1 var(--ff-body), sans-serif;
   cursor: pointer;
   white-space: nowrap;
-  transition: transform 160ms var(--ease), background-color 200ms ease;
+  transition:
+    transform 160ms var(--ease),
+    background-color 200ms ease;
 }
 
 .btn:active {
@@ -327,7 +323,9 @@
   backdrop-filter: blur(10px);
   color: #fff;
   cursor: pointer;
-  transition: transform 160ms var(--ease), background-color 200ms ease;
+  transition:
+    transform 160ms var(--ease),
+    background-color 200ms ease;
 }
 
 .ctl:active {
@@ -354,41 +352,43 @@
   }
 }
 
+/* Wide screens: the same full-screen stories, wider margins and bigger type (Petar, 2026-10-05: desktop must be full screen). */
 @media (min-width: 900px), (orientation: landscape) and (min-width: 600px) {
-  .hero {
-    display: grid;
-    place-items: center;
+  .bars {
+    left: max(24px, calc(50% - 640px));
+    right: max(24px, calc(50% - 640px));
+    top: 18px;
   }
 
-  .backdrop {
-    display: block;
-    position: absolute;
-    inset: -40px;
-    z-index: -1;
+  .nav {
+    left: max(12px, calc(50% - 652px));
+    right: max(12px, calc(50% - 652px));
+    top: 32px;
   }
 
-  .backdrop img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    filter: blur(48px) saturate(1.2) brightness(0.62);
-    opacity: 0;
-    transition: opacity 700ms ease;
+  .story {
+    left: max(24px, calc(50% - 640px));
+    right: auto;
+    max-width: 640px;
+    bottom: 56px;
+    gap: 18px;
   }
 
-  .backdrop img[data-on] {
-    opacity: 1;
+  .headline {
+    font-size: clamp(3.4rem, 6vw, 6rem);
   }
 
-  .card {
-    position: relative;
-    inset: auto;
-    height: min(88svh, 900px);
-    aspect-ratio: 9 / 16;
-    border-radius: 28px;
-    box-shadow: 0 40px 90px -40px rgb(0 0 0 / 0.7);
+  .name {
+    font-size: clamp(3.2rem, 5.6vw, 5.6rem);
+  }
+
+  .meta {
+    font-size: 17px;
+  }
+
+  .controls {
+    right: max(24px, calc(50% - 640px));
+    bottom: 60px;
   }
 
   .ctl:first-child,
@@ -396,8 +396,10 @@
     display: grid;
   }
 
-  .story {
-    right: 150px;
+  .shade {
+    background:
+      linear-gradient(180deg, rgb(0 0 0 / 0.35) 0%, rgb(0 0 0 / 0) 22%),
+      linear-gradient(20deg, var(--shade) 0%, color-mix(in oklab, var(--shade) 70%, transparent) 30%, transparent 62%);
   }
 }
 
@@ -410,5 +412,9 @@
   .story > * {
     transform: none;
     transition: opacity 200ms ease;
+  }
+
+  .count {
+    animation: none;
   }
 }

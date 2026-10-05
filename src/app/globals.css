@@ -25,6 +25,12 @@ html {
   background: var(--limestone);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 body {
   background: var(--limestone);
   color: var(--ink);
