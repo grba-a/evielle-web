@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PRODUCTS, WIDE_QUERY, type Product } from "@/lib/products";
 import { useCart } from "./cart";
-import Ph from "./Ph";
 import { BagIcon, MenuIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon } from "./icons";
 import styles from "./HeroStories.module.css";
 
@@ -247,7 +246,6 @@ export default function HeroStories() {
               </>
             ) : (
               <>
-                <span className={styles.kind}><i style={{ background: s.product.color }} />Prva serija · <Ph>datum</Ph></span>
                 <h2 className={styles.name} lang="en">{s.product.name}</h2>
                 <p className={styles.meta}>{[s.product.type, s.product.size].filter(Boolean).join(" · ")}</p>
                 <button type="button" className={styles.btn} onClick={(e) => add(s.product.id, e.currentTarget)}>U košaricu</button>
