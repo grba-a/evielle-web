@@ -3,7 +3,7 @@ import HeroStories from "@/components/HeroStories";
 import NewsletterPostcard from "@/components/NewsletterPostcard";
 import OnSkin from "@/components/OnSkin";
 import ProductStack from "@/components/ProductStack";
-import SetFan from "@/components/SetFan";
+import SetFeature from "@/components/SetFeature";
 import SiteHeader from "@/components/SiteHeader";
 import TrustStrips from "@/components/TrustStrips";
 
@@ -24,7 +24,7 @@ export default function Home() {
       <main>
         <HeroStories />
         <ProductStack />
-        <SetFan />
+        <SetFeature />
         <OnSkin />
         <TrustStrips />
         <NewsletterPostcard />

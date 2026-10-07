@@ -1,4 +1,6 @@
+import { getImageProps } from "next/image";
 import Link from "next/link";
+import { WIDE_QUERY } from "@/lib/products";
 import { OpenDelivery } from "./cart";
 import Ph from "./Ph";
 import styles from "./FooterFrame.module.css";
@@ -10,17 +12,19 @@ const LINKS = [
   { href: "/#newsletter", label: "Newsletter" },
 ];
 
-// The page ends on a golden-hour frame from the brand film. The legal minimum for a Croatian web shop
+// The page ends at blue hour on Pašman (photo 4316): the day the photos follow is over. The legal minimum for a Croatian web shop
 // (trader data incl. phone, terms, privacy, an online "raskid ugovora") has its place here; the client fills it in.
 // `plain`: no newsletter postcard overlaps the top (product pages).
 export default function FooterFrame({ plain }: { plain?: boolean }) {
+  const { props: { srcSet: wide } } = getImageProps({ alt: "", src: "/media/pasman/footer-wide.jpg", width: 2400, height: 1350, sizes: "100vw" });
+  const { props: { srcSet: tall, ...rest } } = getImageProps({ alt: "", src: "/media/pasman/footer.jpg", width: 1200, height: 1800, sizes: "100vw" });
   return (
     <footer className={`${styles.footer} ${plain ? styles.plain : ""}`}>
       <picture>
-        <source media="(min-width: 900px), (orientation: landscape) and (min-width: 600px)" srcSet="/media/footer-wide.jpg" />
-        <img src="/media/footer.jpg" alt="" loading="lazy" />
+        <source media={WIDE_QUERY} srcSet={wide} sizes="100vw" />
+        <source srcSet={tall} sizes="100vw" />
+        <img {...rest} alt="" />
       </picture>
-      <div className={styles.grain} aria-hidden="true" />
       <div className={styles.content}>
         <p className={styles.title}>Vidimo se na moru.</p>
         <nav aria-label="Podnožje">

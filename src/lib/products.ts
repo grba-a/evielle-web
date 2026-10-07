@@ -1,4 +1,4 @@
-// Product facts come only from the labels in the client's film. Prices, sizes we could not read,
+// Product facts come only from the labels in the client's photos. Prices, sizes we could not read,
 // ingredients and descriptions are not confirmed, so the design shows placeholders (never invent them).
 // This Next.js site is the design prototype; the real shop is built in WordPress (Breakdance) + WooCommerce.
 export const PRICE_PENDING = "Cijena uskoro";
@@ -19,11 +19,10 @@ export type Product = {
   ink: string;
   /** Deep tone of the label colour: the story shade behind white text. */
   shade: string;
-  video: string;
-  poster: string;
-  videoWide: string;
-  posterWide: string;
+  /** Still life, 4:5. It also feeds the cart and the shop grid. The props wait on the client's INCI (Reg. 1223/2009 art. 20). */
   image: string;
+  /** Product page gallery, 4:5: still life, in use, in the hand, mood, set (Petar, artifact 7: galerija). */
+  gallery: string[];
   /** The label shows no SPF on the tanning butter; the client confirms the warning before launch. */
   spfNote?: boolean;
 };
@@ -39,11 +38,8 @@ export const PRODUCTS: Product[] = [
     color: "#E8826A",
     ink: "#10292A",
     shade: "#5A2418",
-    video: "/media/hero/butter.mp4",
-    poster: "/media/hero/butter.jpg",
-    videoWide: "/media/hero/butter-wide.mp4",
-    posterWide: "/media/hero/butter-wide.jpg",
-    image: "/media/products/butter.jpg",
+    image: "/media/pasman/butter.jpg",
+    gallery: ["/media/pasman/butter.jpg", "/media/pasman/g-3748.jpg", "/media/pasman/g-3125.jpg", "/media/pasman/g-3836.jpg", "/media/pasman/set.jpg"],
     spfNote: true,
   },
   {
@@ -55,11 +51,8 @@ export const PRODUCTS: Product[] = [
     color: "#CFE6DA",
     ink: "#10292A",
     shade: "#1F4A3F",
-    video: "/media/hero/mist.mp4",
-    poster: "/media/hero/mist.jpg",
-    videoWide: "/media/hero/mist-wide.mp4",
-    posterWide: "/media/hero/mist-wide.jpg",
-    image: "/media/products/mist.jpg",
+    image: "/media/pasman/mist.jpg",
+    gallery: ["/media/pasman/mist.jpg", "/media/pasman/g-3227_1.jpg", "/media/pasman/g-3951.jpg", "/media/pasman/g-4045.jpg", "/media/pasman/set.jpg"],
   },
   {
     id: "oil",
@@ -70,11 +63,8 @@ export const PRODUCTS: Product[] = [
     color: "#B4502F",
     ink: "#FFFFFF",
     shade: "#4A1A0C",
-    video: "/media/hero/oil.mp4",
-    poster: "/media/hero/oil.jpg",
-    videoWide: "/media/hero/oil-wide.mp4",
-    posterWide: "/media/hero/oil-wide.jpg",
-    image: "/media/products/oil.jpg",
+    image: "/media/pasman/oil.jpg",
+    gallery: ["/media/pasman/oil.jpg", "/media/pasman/g-4121.jpg", "/media/pasman/g-4663.jpg", "/media/pasman/g-4118.jpg", "/media/pasman/set.jpg"],
   },
 ];
 
@@ -83,9 +73,16 @@ export const SET = {
   id: "set" as const,
   name: "Set u pamučnoj vrećici",
   type: "Sva tri proizvoda",
-  image: "/media/set.jpg",
+  image: "/media/pasman/set.jpg",
+  /** The same still life at its native 3:2, for wide screens. */
+  imageWide: "/media/pasman/set-wide.jpg",
   color: "#EDE3D0",
 };
+
+/** From November the set leads as a gift; in December its headline turns to the tree (Petar, artifact 7: bozic). */
+export function setHeadline(month: number) {
+  return month === 11 ? "Ljeto pod borom." : "Ljeto, zapakirano.";
+}
 
 export type ItemId = Product["id"] | "set" | "gift";
 

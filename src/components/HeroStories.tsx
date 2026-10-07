@@ -1,45 +1,31 @@
 "use client";
 
+import { getImageProps } from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PRODUCTS, WIDE_QUERY, type Product } from "@/lib/products";
+import { WIDE_QUERY, productById, setHeadline } from "@/lib/products";
+import { STORIES, type Story } from "@/lib/stories";
+import { useMonth } from "@/lib/useMonth";
 import { useCart } from "./cart";
 import { BagIcon, MenuIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon } from "./icons";
 import styles from "./HeroStories.module.css";
 
-type Media = { video: string; poster: string; videoWide: string; posterWide: string; shade: string; label: string };
-type Story = (Media & { kind: "intro" }) | (Media & { kind: "product"; product: Product });
-
-const STORIES: Story[] = [
-  {
-    kind: "intro",
-    video: "/media/hero/sea.mp4",
-    poster: "/media/hero/sea.jpg",
-    videoWide: "/media/hero/sea-wide.mp4",
-    posterWide: "/media/hero/sea-wide.jpg",
-    shade: "#0B3433",
-    label: "Evielle",
-  },
-  ...PRODUCTS.map((p) => ({
-    kind: "product" as const,
-    video: p.video,
-    poster: p.poster,
-    videoWide: p.videoWide,
-    posterWide: p.posterWide,
-    shade: p.shade,
-    label: p.name,
-    product: p,
-  })),
-];
-
-const DURATION = 5200;
+const DURATION = 6000;
 const HOLD_MS = 220;
 const SWIPE_PX = 40;
 
 const HEADLINE = "Ljeto koje ostaje na koži.";
 const CTA = "Upoznaj sva tri";
 
+// Portrait on phones, landscape on wide screens, both through the image optimizer (AVIF/WebP, srcset).
+function photo(s: Story, first: boolean) {
+  const common = { alt: "", sizes: "100vw" };
+  const { props: { srcSet: wide } } = getImageProps({ ...common, src: s.wide, width: 2400, height: 1600 });
+  const { props: { srcSet: tall, ...rest } } = getImageProps({ ...common, src: s.image, width: 1200, height: 1800, fetchPriority: first ? "high" : undefined, loading: first ? "eager" : undefined });
+  return { wide, tall, rest };
+}
+
 export default function HeroStories() {
-  const { add, open, count, bump, panel } = useCart();
+  const { add, open, openProduct, count, bump, panel } = useCart();
   // prev keeps the outgoing layer painted under the incoming one until the fade ends (motion A2).
   // seen: media is fetched for the current and the next story only (review T1); once fetched it stays.
   const [{ index, prev, seen }, setPos] = useState({ index: 0, prev: -1, seen: [0, 1] });
@@ -49,11 +35,9 @@ export default function HeroStories() {
   const [reduce, setReduce] = useState(false);
   // Stories start moving only after the page has loaded and gone idle (Lighthouse SI, review T2).
   const [ready, setReady] = useState(false);
-  // null until mounted: the right clip (portrait or landscape) is chosen on the client, the poster covers the wait.
-  const [wide, setWide] = useState<boolean | null>(null);
+  const month = useMonth();
 
   const root = useRef<HTMLElement>(null);
-  const videos = useRef<(HTMLVideoElement | null)[]>([]);
   const fills = useRef<(HTMLSpanElement | null)[]>([]);
   const anim = useRef<Animation | null>(null);
   const press = useRef<{ x: number; y: number; t: ReturnType<typeof setTimeout> | undefined; held: boolean } | null>(null);
@@ -74,11 +58,9 @@ export default function HeroStories() {
 
   useEffect(() => {
     const rm = matchMedia("(prefers-reduced-motion: reduce)");
-    const wq = matchMedia(WIDE_QUERY);
-    const sync = () => { setReduce(rm.matches); setWide(wq.matches); };
+    const sync = () => setReduce(rm.matches);
     sync();
     rm.addEventListener("change", sync);
-    wq.addEventListener("change", sync);
     const go = () => {
       const idle = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
       if (idle) idle(() => setReady(true), { timeout: 1500 });
@@ -86,7 +68,7 @@ export default function HeroStories() {
     };
     if (document.readyState === "complete") go();
     else window.addEventListener("load", go, { once: true });
-    return () => { rm.removeEventListener("change", sync); wq.removeEventListener("change", sync); window.removeEventListener("load", go); };
+    return () => { rm.removeEventListener("change", sync); window.removeEventListener("load", go); };
   }, []);
 
   // Stop everything when the hero leaves the screen or the tab is hidden.
@@ -101,13 +83,8 @@ export default function HeroStories() {
     return () => { io.disconnect(); document.removeEventListener("visibilitychange", update); };
   }, []);
 
-  // New story: restart its clip and its progress bar.
+  // New story: restart its progress bar.
   useEffect(() => {
-    videos.current.forEach((v, i) => {
-      if (!v) return;
-      if (i === index) v.currentTime = 0;
-      else v.pause();
-    });
     fills.current.forEach((f, i) => {
       if (!f) return;
       f.getAnimations().forEach((a) => a.cancel());
@@ -125,15 +102,9 @@ export default function HeroStories() {
 
   // Play or hold the current story.
   useEffect(() => {
-    const v = videos.current[index];
-    if (running) {
-      anim.current?.play();
-      v?.play().catch(() => {});
-    } else {
-      anim.current?.pause();
-      v?.pause();
-    }
-  }, [running, index, wide, seen]);
+    if (running) anim.current?.play();
+    else anim.current?.pause();
+  }, [running, index]);
 
   const onPointerDown = (e: React.PointerEvent) => {
     if ((e.target as HTMLElement).closest("button, a")) return;
@@ -177,34 +148,45 @@ export default function HeroStories() {
       >
         {STORIES.map((s, i) => {
           const load = seen.includes(i);
+          const p = load ? photo(s, i === 0) : null;
           return (
             // each layer carries its own shade, so the colour fades with the picture instead of jumping (motion A1)
-            <div key={s.label} className={styles.media} data-on={i === index ? "" : undefined} data-prev={i === prev && i !== index ? "" : undefined} style={{ "--shade": s.shade } as React.CSSProperties} aria-hidden="true">
-              {load && (
-                <picture>
-                  <source media={WIDE_QUERY} srcSet={s.posterWide} />
-                  <img src={s.poster} alt="" fetchPriority={i === 0 ? "high" : "auto"} />
-                </picture>
+            <div
+              key={s.id}
+              className={styles.media}
+              data-on={i === index ? "" : undefined}
+              data-prev={i === prev && i !== index ? "" : undefined}
+              style={{ "--shade": s.shade, "--focus": s.focus, "--wfocus": s.wideFocus } as React.CSSProperties}
+              aria-hidden="true"
+            >
+              {p && (
+                <div className={styles.frame}>
+                  <picture>
+                    <source media={WIDE_QUERY} srcSet={p.wide} sizes="100vw" />
+                    <source srcSet={p.tall} sizes="100vw" />
+                    <img {...p.rest} alt="" />
+                  </picture>
+                  {/* the second frame of the burst: lazy, hidden on wide screens, and it cuts in only once decoded */}
+                  {s.beat && !reduce && (
+                    <picture>
+                      <img
+                        className={styles.beat}
+                        {...getImageProps({ alt: "", sizes: "100vw", src: s.beat, width: 1200, height: 1800 }).props}
+                        alt=""
+                        onLoad={(e) => { const el = e.currentTarget; el.decode().then(() => el.setAttribute("data-ready", ""), () => {}); }}
+                      />
+                    </picture>
+                  )}
+                </div>
               )}
-              <video
-                ref={(el) => { videos.current[i] = el; }}
-                src={load && wide !== null ? (wide ? s.videoWide : s.video) : undefined}
-                muted
-                loop
-                playsInline
-                preload={load ? "auto" : "none"}
-                onPlaying={(e) => e.currentTarget.setAttribute("data-playing", "")}
-                onEmptied={(e) => e.currentTarget.removeAttribute("data-playing")}
-              />
             </div>
           );
         })}
-        <div className={styles.grain} aria-hidden="true" />
 
         <div className={styles.top}>
           <div className={styles.bars} aria-hidden="true">
             {STORIES.map((s, i) => (
-              <span key={s.label} className={styles.bar}>
+              <span key={s.id} className={styles.bar}>
                 <span ref={(el) => { fills.current[i] = el; }} className={styles.fill} />
               </span>
             ))}
@@ -229,30 +211,46 @@ export default function HeroStories() {
           </button>
         </header>
 
-        {STORIES.map((s, i) => (
-          <div
-            key={s.label}
-            className={styles.story}
-            role="group"
-            aria-roledescription="slide"
-            aria-label={`${i + 1} od ${STORIES.length}: ${s.label}`}
-            data-on={i === index ? "" : undefined}
-            inert={i !== index}
-          >
-            {s.kind === "intro" ? (
-              <>
-                <h1 className={styles.headline}>{HEADLINE}</h1>
-                <button type="button" className={styles.btn} onClick={() => step(1)}>{CTA}</button>
-              </>
-            ) : (
-              <>
-                <h2 className={styles.name} lang="en">{s.product.name}</h2>
-                <p className={styles.meta}>{[s.product.type, s.product.size].filter(Boolean).join(" · ")}</p>
-                <button type="button" className={styles.btn} onClick={(e) => add(s.product.id, e.currentTarget)}>U košaricu</button>
-              </>
-            )}
-          </div>
-        ))}
+        {STORIES.map((s, i) => {
+          const p = s.kind === "set" ? null : productById(s.product);
+          return (
+            <div
+              key={s.id}
+              className={styles.story}
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`${i + 1} od ${STORIES.length}: ${s.label}`}
+              data-on={i === index ? "" : undefined}
+              inert={i !== index}
+            >
+              {s.kind === "intro" && p ? (
+                <>
+                  <p className={styles.kicker} lang="en">{p.name}</p>
+                  <h1 className={styles.headline}>{HEADLINE}</h1>
+                  <button type="button" className={styles.btn} onClick={() => step(1)}>{CTA}</button>
+                </>
+              ) : s.kind === "product" && p ? (
+                <>
+                  <h2 className={styles.name} lang="en">{p.name}</h2>
+                  <p className={styles.meta}>{[p.type, p.size].filter(Boolean).join(" · ")}</p>
+                  <span className={styles.actions}>
+                    <button type="button" className={styles.btn} onClick={(e) => add(p.id, e.currentTarget)}>U košaricu</button>
+                    <button type="button" className={styles.link} onClick={() => openProduct(p.id)}>Detalji</button>
+                  </span>
+                </>
+              ) : (
+                <>
+                  <h2 className={styles.name}>{setHeadline(month)}</h2>
+                  <p className={styles.meta}>Sva tri u pamučnoj vrećici</p>
+                  <span className={styles.actions}>
+                    <button type="button" className={styles.btn} onClick={(e) => add("set", e.currentTarget)}>Dodaj set</button>
+                    <button type="button" className={styles.link} onClick={(e) => add("gift", e.currentTarget)}>Pošalji kao poklon</button>
+                  </span>
+                </>
+              )}
+            </div>
+          );
+        })}
 
         {/* keyboard and screen readers only: taps and swipes steer the stories on screen */}
         <div className={styles.controls}>
