@@ -17,8 +17,9 @@
   view-timeline: --deck block;
 }
 
-/* The photo alone, rounded, with a soft shadow; the card itself is page-coloured so the deck still covers
-   the card underneath (Petar, artifact 7: no colour frame on product photos). */
+/* The photo alone, rounded, with a soft shadow (Petar, artifact 7: no colour frame on product photos).
+   The card has no background of its own, so in the deck only the rounded photo shows over the one below;
+   the text strip is page-coloured so the text of the card underneath never shows through. */
 .card {
   position: sticky;
   top: calc(env(safe-area-inset-top, 0px) + 66px + var(--i) * 12px);
@@ -26,18 +27,15 @@
   height: min(124vw, 72svh);
   display: grid;
   grid-template-rows: 1fr auto;
-  padding-top: 8px;
-  background: var(--limestone);
   color: var(--ink);
   transform-origin: 50% 0;
 }
 
-/* dim = overlay opacity, never a filter */
-.card::after {
+/* dim = overlay opacity on the photo only, never a filter */
+.image::after {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: inherit;
   background: #0b3433;
   opacity: 0;
   pointer-events: none;
@@ -67,6 +65,7 @@
 }
 
 .info {
+  background: var(--limestone);
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -141,7 +140,7 @@
       animation-range: exit-crossing calc(var(--i) * 33.333%) exit-crossing 66.666%;
     }
 
-    .card:not(:last-child)::after {
+    .card:not(:last-child) .image::after {
       animation: dim linear both;
       animation-timeline: --deck;
       animation-range: exit-crossing calc(var(--i) * 33.333%) exit-crossing 66.666%;
